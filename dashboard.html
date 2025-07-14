@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IndianHotelHub Pro Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* Reset and base */
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #121212;
+    color: #e0e0e0;
+    display: flex;
+    min-height: 100vh;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  /* Light mode */
+  body.light-mode {
+    background: #f5f5f5;
+    color: #121212;
+  }
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    background: #1f2937;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    transition: background 0.3s ease;
+  }
+  body.light-mode .sidebar {
+    background: #e0e0e0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.15);
+  }
+  .sidebar h1 {
+    font-size: 2rem;
+    color: #4f46e5;
+    font-weight: 800;
+    margin-bottom: 50px;
+    letter-spacing: 3px;
+    user-select: none;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: background 0.4s cubic-bezier(0.4,0,0.2,1), color 0.3s ease;
+    color: #cbd5e1;
+    font-weight: 600;
+    font-size: 1.1rem;
+    user-select: none;
+    position: relative;
+  }
+  .nav-item svg {
+    width: 24px;
+    height: 24px;
+    margin-right: 16px;
+    fill: currentColor;
+    transition: transform 0.3s ease;
+  }
+  .nav-item:hover {
+    background: #4f46e5;
+    color: white;
+  }
+  .nav-item:hover svg {
+    transform: scale(1.2);
+  }
+  .nav-item.active {
+    background: #6366f1;
+    color: white;
+    box-shadow: 0 6px 14px #6366f1aa;
+  }
+  /* Logout button */
+  #logoutBtn {
+    margin-top: auto;
+    padding: 14px 28px;
+    background: #ef4444;
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 6px 12px rgba(239, 68, 68, 0.7);
+  }
+  #logoutBtn:hover {
+    background: #dc2626;
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.9);
+  }
+  /* Main Content */
+  .main-content {
+    flex-grow: 1;
+    background: #181c24;
+    padding: 30px 40px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  body.light-mode .main-content {
+    background: #ffffff;
+    color: #121212;
+  }
+  /* Topbar */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 36px;
+  }
+  .topbar h2 {
+    font-weight: 700;
+    font-size: 2rem;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .user-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #94a3b8;
+  }
+  body.light-mode .user-name {
+    color: #555;
+  }
+  .notification-icon {
+    position: relative;
+    cursor: pointer;
+  }
+  .notification-icon svg {
+    width: 26px; height: 26px;
+    fill: #94a3b8;
+    transition: fill 0.3s ease;
+  }
+  .notification-icon:hover svg {
+    fill: #6366f1;
+  }
+  .notification-badge {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 14px; height: 14px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid #181c24;
+    animation: pulse 2s infinite;
+  }
+  body.light-mode .notification-badge {
+    border-color: #fff;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 28px;
+    border-bottom: 3px solid #2d3748;
+    margin-bottom: 36px;
+  }
+  body.light-mode .tabs {
+    border-color: #ccc;
+  }
+  .tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    font-weight: 700;
+    color: #94a3b8;
+    border-bottom: 4px solid transparent;
+    font-size: 1.15rem;
+    transition: all 0.3s ease;
+  }
+  .tab.active {
+    color: #6366f1;
+    border-color: #6366f1;
+  }
+  .tab:hover:not(.active) {
+    color: #7c3aed;
+  }
+  /* Card */
+  .card {
+    background: #222933;
+    border-radius: 20px;
+    padding: 32px 48px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.7);
+    flex-grow: 1;
+    overflow-y: auto;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  body.light-mode .card {
+    background: #fefefe;
+    color: #121212;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+  /* Form */
+  form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  form input[type="text"], form input[type="email"], form input[type="tel"], form select {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: none;
+    background: #1f2937;
+    color: #e0e0e0;
+    font-size: 1rem;
+    margin-bottom: 22px;
+    transition: box-shadow 0.3s ease;
+  }
+  body.light-mode form input[type="text"], 
+  body.light-mode form input[type="email"], 
+  body.light-mode form input[type="tel"],
+  body.light-mode form select {
+    background: #e7e7e7;
+    color: #121212;
+  }
+  form input[type="text"]:focus, 
+  form input[type="email"]:focus, 
+  form input[type="tel"]:focus,
+  form select:focus {
+    outline: none;
+    box-shadow: 0 0 12px #6366f1;
+  }
+  form input[readonly] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  form button {
+    background: #6366f1;
+    color: white;
+    font-weight: 800;
+    font-size: 1.15rem;
+    padding: 16px 36px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    user-select: none;
+  }
+  form button:hover {
+    background: #4f46e5;
+  }
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: inherit;
+  }
+  thead tr {
+    border-bottom: 3px solid #6366f1;
+  }
+  tbody tr {
+    border-bottom: 1px solid #374151;
+    transition: background 0.3s ease;
+  }
+  tbody tr:hover {
+    background: #6366f1aa;
+  }
+  th, td {
+    padding: 14px 20px;
+    text-align: left;
+  }
+  td.status {
+    font-weight: 700;
+    padding: 10px 14px;
+    border-radius: 12px;
+    color: white;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    width: 110px;
+  }
+  td.status.confirmed {
+    background: #22c55e; /* green */
+  }
+  td.status.pending {
+    background: #facc15; /* yellow */
+    color: #333;
+  }
+  td.status.cancelled {
+    background: #ef4444; /* red */
+  }
+  /* Search box */
+  .search-filter {
+    margin-bottom: 24px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .search-filter input[type="text"],
+  .search-filter select {
+    flex-grow: 1;
+    max-width: 300px;
+  }
+  /* Chart container */
+  #charts {
+    display: flex;
+    gap: 24px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #charts canvas {
+    background: transparent;
+    border-radius: 20px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.6);
+    flex: 1 1 300px; /* responsive grow/shrink, base width 300px */
+    min-width: 280px;
+    height: 280px;
+    max-width: 480px; /* optional */
+  }
+  body.light-mode #charts canvas {
+    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+  }
+  /* Responsive */
+  @media(max-width: 1000px) {
+    .main-content {
+      padding: 20px 24px;
+    }
+    #charts {
+      flex-direction: column;
+      gap: 30px;
+    }
+    #charts canvas {
+      max-width: 100%;
+      height: 240px;
+    }
+  }
+  @media(max-width: 720px) {
+    body {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      flex-direction: row;
+      padding: 12px 16px;
+      overflow-x: auto;
+      box-shadow: none;
+    }
+    .sidebar h1 {
+      font-size: 1.4rem;
+      margin-right: 24px;
+    }
+    .nav-item {
+      margin-bottom: 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+  }
+  /* Snackbar */
+  #snackbar {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    padding: 16px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    user-select: none;
+  }
+  #snackbar.show {
+    visibility: visible;
+    animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  }
+  @keyframes fadein {
+    from { bottom: 0; opacity: 0;}
+    to { bottom: 30px; opacity: 1;}
+  }
+  @keyframes fadeout {
+    from { bottom: 30px; opacity: 1;}
+    to { bottom: 0; opacity: 0;}
+  }
+  /* Dark mode toggle */
+  #darkModeToggle {
+    cursor: pointer;
+    padding: 10px 18px;
+    border-radius: 16px;
+    background: #4f46e5;
+    color: white;
+    font-weight: 700;
+    border: none;
+    transition: background 0.3s ease;
+    margin-top: 20px;
+    user-select: none;
+  }
+  #darkModeToggle:hover {
+    background: #6366f1;
+  }
+</style>
+</head>
+<body>
+
+  <aside class="sidebar" aria-label="Sidebar Navigation">
+    <h1>IndianHotelHub</h1>
+    <div class="nav-item active" data-tab="dashboard" tabindex="0" role="button" aria-pressed="true" title="Dashboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8v-10h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-tab="profile" tabindex="0" role="button" aria-pressed="false" title="Profile">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      Profile
+    </div>
+    <div class="nav-item" data-tab="bookings" tabindex="0" role="button" aria-pressed="false" title="Bookings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14h10v-4H7v4zm12-9H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2z"/></svg>
+      Bookings
+    </div>
+    <div class="nav-item" data-tab="favorites" tabindex="0" role="button" aria-pressed="false" title="Favorites">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3 9.24 3 10.91 3.81 12 5.08 13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      Favorites
+    </div>
+    <button id="logoutBtn" title="Logout">Logout</button>
+    <button id="darkModeToggle" title="Toggle Dark/Light Mode">Light Mode</button>
+  </aside>
+
+  <main class="main-content" role="main" tabindex="0">
+    <header class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="user-info" aria-label="User Info">
+        <span class="user-name" id="userName">Loading...</span>
+        <div class="notification-icon" title="Notifications" role="button" aria-live="polite" aria-atomic="true" aria-label="You have notifications">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 1.99-.9 1.99-2H10c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.63-5.64-4.5-6.32V4a1.5 1.5 0 10-3 0v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          <span class="notification-badge" id="notificationBadge" style="display:none;"></span>
+        </div>
+      </div>
+    </header>
+
+    <div class="tabs" role="tablist">
+      <div class="tab active" data-tab="dashboard" role="tab" aria-selected="true" tabindex="0">Dashboard</div>
+      <div class="tab" data-tab="profile" role="tab" aria-selected="false" tabindex="-1">Profile</div>
+      <div class="tab" data-tab="bookings" role="tab" aria-selected="false" tabindex="-1">Bookings</div>
+      <div class="tab" data-tab="favorites" role="tab" aria-selected="false" tabindex="-1">Favorites</div>
+    </div>
+
+    <!-- Dashboard Tab Content -->
+    <section class="tab-content" data-content="dashboard" aria-live="polite">
+      <div id="charts" aria-label="Dashboard Charts">
+        <canvas id="chartRevenue" aria-label="Revenue Chart" role="img"></canvas>
+        <canvas id="chartBookings" aria-label="Bookings Chart" role="img"></canvas>
+      </div>
+      <!-- Add more dashboard widgets if needed -->
+    </section>
+
+    <!-- Profile Tab Content -->
+    <section class="tab-content" data-content="profile" hidden aria-live="polite">
+      <div class="card">
+        <h3>Profile Information</h3>
+        <form id="profileForm" aria-label="Profile Form">
+          <label for="fullName">Full Name</label>
+          <input type="text" id="fullName" name="fullName" autocomplete="name" required />
+
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" autocomplete="email" required />
+
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" autocomplete="tel" required />
+
+          <button type="submit">Update Profile</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Bookings Tab Content -->
+    <section class="tab-content" data-content="bookings" hidden aria-live="polite">
+      <div class="card">
+        <h3>Bookings</h3>
+        <div class="search-filter" role="search">
+          <input type="text" id="searchInput" placeholder="Search bookings..." aria-label="Search bookings" />
+          <select id="filterStatus" aria-label="Filter bookings by status">
+            <option value="">All Statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <table aria-describedby="bookingCount">
+          <thead>
+            <tr>
+              <th>Booking ID</th>
+              <th>Guest Name</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Room Type</th>
+            </tr>
+          </thead>
+          <tbody id="bookingTableBody">
+            <!-- Booking rows will be inserted here -->
+          </tbody>
+        </table>
+        <p id="bookingCount" style="margin-top: 12px;">Total Bookings: <span id="totalBookings">0</span></p>
+      </div>
+    </section>
+
+    <!-- Favorites Tab Content -->
+    <section class="tab-content" data-content="favorites" hidden aria-live="polite">
+      <div class="card">
+        <h3>Favorites</h3>
+        <p>You don't have any favorites yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Snackbar for logout confirmation -->
+  <div id="snackbar" role="alert" aria-live="assertive"></div>
+
+<script>
+  // Tabs switching logic
+  const tabs = document.querySelectorAll('.tab');
+  const navItems = document.querySelectorAll('.nav-item');
+  const tabContents = document.querySelectorAll('.tab-content');
+  const pageTitle = document.getElementById('pageTitle');
+
+  function activateTab(tabName) {
+    tabs.forEach(t => {
+      const isActive = t.dataset.tab === tabName;
+      t.classList.toggle('active', isActive);
+      t.setAttribute('aria-selected', isActive);
+      t.tabIndex = isActive ? 0 : -1;
+    });
+    navItems.forEach(n => {
+      const isActive = n.dataset.tab === tabName;
+      n.classList.toggle('active', isActive);
+      n.setAttribute('aria-pressed', isActive);
+      n.tabIndex = 0;
+    });
+    tabContents.forEach(c => {
+      c.hidden = c.dataset.content !== tabName;
+    });
+    pageTitle.textContent = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      activateTab(tab.dataset.tab);
+    });
+    tab.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activateTab(tab.dataset.tab);
+      }
+    });
+  });
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      activateTab(item.dataset.tab);
+    });
+    item.addEventListener('keydown', e => {
+      if(e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activateTab(item.dataset.tab);
+      }
+    });
+  });
+
+  // Dark/Light mode toggle
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  darkModeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    darkModeToggle.textContent = document.body.classList.contains('light-mode') ? 'Dark Mode' : 'Light Mode';
+  });
+
+  // Logout with snackbar
+  const logoutBtn = document.getElementById('logoutBtn');
+  const snackbar = document.getElementById('snackbar');
+  logoutBtn.addEventListener('click', () => {
+    // Here add firebase logout logic or any logout logic
+    // For demo, just show snackbar and switch to login page simulation
+    snackbar.textContent = "You have logged out";
+    snackbar.classList.add('show');
+    setTimeout(() => {
+      snackbar.classList.remove('show');
+      // Redirect to login page simulation:
+      alert("Redirecting to Login page...");
+      // window.location.href = "login.html"; // uncomment this for real redirect
+    }, 3000);
+  });
+
+  // Dummy user info load
+  document.getElementById('userName').textContent = "Vijay Kumar Thakur";
+
+  // Chart.js setup
+  const revenueCtx = document.getElementById('chartRevenue').getContext('2d');
+  const bookingsCtx = document.getElementById('chartBookings').getContext('2d');
+
+  const revenueChart = new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+      datasets: [{
+        label: 'Revenue',
+        data: [12000, 15000, 14000, 18000, 17000, 21000, 24000],
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79,70,229,0.3)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 3,
+        hoverBorderWidth: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: {color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0'} }
+      },
+      scales: {
+        x: { ticks: { color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0' } },
+        y: { ticks: { color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0' } }
+      }
+    }
+  });
+
+  const bookingsChart = new Chart(bookingsCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+      datasets: [{
+        label: 'Bookings',
+        data: [30, 45, 38, 50, 49, 60, 70],
+        backgroundColor: '#6366f1',
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: {color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0'} }
+      },
+      scales: {
+        x: { ticks: { color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0' } },
+        y: { ticks: { color: document.body.classList.contains('light-mode') ? '#121212' : '#e0e0e0' } }
+      }
+    }
+  });
+
+  // Update charts colors on theme toggle
+  darkModeToggle.addEventListener('click', () => {
+    const isLight = document.body.classList.contains('light-mode');
+    revenueChart.options.plugins.legend.labels.color = isLight ? '#121212' : '#e0e0e0';
+    revenueChart.options.scales.x.ticks.color = isLight ? '#121212' : '#e0e0e0';
+    revenueChart.options.scales.y.ticks.color = isLight ? '#121212' : '#e0e0e0';
+    revenueChart.update();
+
+    bookingsChart.options.plugins.legend.labels.color = isLight ? '#121212' : '#e0e0e0';
+    bookingsChart.options.scales.x.ticks.color = isLight ? '#121212' : '#e0e0e0';
+    bookingsChart.options.scales.y.ticks.color = isLight ? '#121212' : '#e0e0e0';
+    bookingsChart.update();
+  });
+
+  // Booking data & filter/search logic
+  const bookingsData = [
+    {id: 'B001', guest: 'Amit Sharma', date: '2025-06-01', status: 'confirmed', room: 'Deluxe'},
+    {id: 'B002', guest: 'Neha Gupta', date: '2025-06-03', status: 'pending', room: 'Standard'},
+    {id: 'B003', guest: 'Rahul Singh', date: '2025-06-10', status: 'cancelled', room: 'Suite'},
+    {id: 'B004', guest: 'Priya Patel', date: '2025-07-02', status: 'confirmed', room: 'Standard'},
+    {id: 'B005', guest: 'Vijay Kumar', date: '2025-07-05', status: 'confirmed', room: 'Deluxe'},
+  ];
+
+  const bookingTableBody = document.getElementById('bookingTableBody');
+  const totalBookingsSpan = document.getElementById('totalBookings');
+  const searchInput = document.getElementById('searchInput');
+  const filterStatus = document.getElementById('filterStatus');
+
+  function renderBookings() {
+    const filter = filterStatus.value.toLowerCase();
+    const search = searchInput.value.toLowerCase();
+
+    const filtered = bookingsData.filter(b => {
+      const matchesStatus = filter ? b.status === filter : true;
+      const matchesSearch = b.id.toLowerCase().includes(search) || b.guest.toLowerCase().includes(search);
+      return matchesStatus && matchesSearch;
+    });
+
+    bookingTableBody.innerHTML = '';
+    filtered.forEach(b => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.id}</td>
+        <td>${b.guest}</td>
+        <td>${b.date}</td>
+        <td class="status ${b.status}">${b.status}</td>
+        <td>${b.room}</td>
+      `;
+      bookingTableBody.appendChild(tr);
+    });
+    totalBookingsSpan.textContent = filtered.length;
+  }
+
+  searchInput.addEventListener('input', renderBookings);
+  filterStatus.addEventListener('change', renderBookings);
+
+  renderBookings();
+
+</script>
+</body>
+</html>

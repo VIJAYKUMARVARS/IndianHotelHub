@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>IndianHotelHub – Premium Online Hotel Booking</title>
+  <style>
+    /* === Original Styles (unchanged) === */
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f9f9f9; color: #333; line-height: 1.6; }
+    .container { max-width: 1200px; margin: auto; padding: 0 20px; }
+    header { background: #1e90ff; color: #fff; padding: 15px 0; position: sticky; top:0; z-index:1000; box-shadow:0 4px 10px rgba(30,144,255,0.3); }
+    header .container { display:flex; justify-content:space-between; align-items:center; }
+    header h1 { font-size:1.8rem; letter-spacing:1px; }
+    nav { display:flex; gap:15px; }
+    nav a { color:#fff; text-decoration:none; font-weight:600; transition: color .3s; }
+    nav a:hover, nav a:focus { color:#ffdd57; }
+    .menu-toggle { display:none; cursor:pointer; font-size:1.5rem; }
+    @media (max-width:768px){
+      nav { position:absolute; top:60px; right:20px; background:#1e90ff; flex-direction:column; padding:10px; border-radius:8px; display:none; }
+      nav.show{ display:flex; }
+      .menu-toggle { display:block; }
+    }
+    .hero {
+      background:url('https://images.unsplash.com/photo-1501117716987-c8f6a9373d6b?auto=format&fit=crop&w=1350&q=80') center/cover no-repeat;
+      height:500px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      position:relative;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:rgba(30,144,255,.7);
+      border-radius:8px;
+    }
+    .hero-content {
+      position:relative; z-index:2; max-width:600px;
+      background:rgba(255,255,255,.1); padding:30px;
+      border-radius:8px; backdrop-filter:blur(5px); text-align:center; color:#fff;
+    }
+    .hero-content h2 { font-size:2.8rem; margin-bottom:20px; }
+    .hero-content p { font-size:1.1rem; margin-bottom:20px; }
+    .booking-form {
+      display:flex; flex-wrap:wrap; gap:15px; justify-content:center; position:relative;
+    }
+    .booking-form input, .booking-form select, .booking-form button {
+      padding:12px 15px; border:none; border-radius:6px; font-size:1rem; width:180px;
+    }
+    .booking-form button {
+      background:#ffdd57; font-weight:700; cursor:pointer; color:#333;
+    }
+    .loader {
+      border:4px solid #f3f3f3; border-top:4px solid #1e90ff;
+      border-radius:50%; width:24px; height:24px;
+      animation:spin 1s linear infinite; display:none;
+      position:absolute; top:50%; right:200px;
+      transform:translateY(-50%);
+    }
+    @keyframes spin{ to { transform:rotate(360deg); } }
+    .hotels { margin:50px 0; }
+    .hotels h3 { text-align:center; font-size:2.2rem; margin-bottom:20px; color:#1e90ff; }
+    .hotel-list {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:30px;
+    }
+    .hotel-card {
+      background:#fff; border-radius:12px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.1);
+      display:flex; flex-direction:column;
+      overflow:hidden; transition:transform .3s;
+    }
+    .hotel-card:hover { transform:translateY(-8px); }
+    .hotel-image { width:100%; height:180px; object-fit:cover; border-bottom:3px solid #1e90ff; }
+    .hotel-info { padding:20px; flex-grow:1; display:flex; flex-direction:column; }
+    .hotel-info h4 { font-size:1.2rem; margin-bottom:10px; }
+    .hotel-info p { flex-grow:1; font-size:.95rem; color:#666; margin-bottom:15px; }
+    .hotel-info .price { font-weight:700; color:#1e90ff; font-size:1.2rem; margin-bottom:15px; }
+    .hotel-info button {
+      background:#1e90ff; color:#fff; font-weight:700;
+      padding:10px; border-radius:6px; cursor:pointer;
+    }
+   #map {
+        width: 100%;height: 50vw; /* responsive height relative to screen width */max-height: 500px;min-height: 300px;border-radius: 12px;margin-bottom: 50px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+    /* === Modal Styles === */
+    .modal, .auth-modal {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,.7); display:none;
+      align-items:flex-start; justify-content:center;
+      padding-top: 50px; z-index:9999;
+    }
+    .modal-content, .auth-content {
+      background:#fff; padding:20px;
+      border-radius:8px; max-width:500px;
+      text-align:center; width:90%;
+    }
+    .modal-content button, .auth-content button {
+      margin-top:15px; padding:10px 20px;
+      background:#1e90ff; color:#fff;
+      border:none; border-radius:6px; cursor:pointer;
+    }
+
+    .auth-button {
+      background: #fff; color: #1e90ff;
+      border: 2px solid #fff; padding: 6px 12px;
+      border-radius: 6px; font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Signup/Login form styling */
+    .auth-content input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px auto;
+      display: block;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <h1>IndianHotelHub</h1>
+      <div class="menu-toggle" tabindex="0" aria-label="Toggle navigation">☰</div>
+      <nav aria-label="Main navigation">
+        <a href="#hotels">Hotels</a>
+        <a href="#mapSection">Map</a>
+        <a href="#booking">Booking</a>
+        <a href="#contact">Contact</a>
+        <button class="auth-button" onclick="handleAuthClick()">Login/Signup</button>
+
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content" id="booking">
+      <h2>Book Your Dream Stay Across India</h2>
+      <p>Select from metro cities and book instantly!</p>
+      <form class="booking-form" id="bookingForm" novalidate>
+        <input type="text" id="name" placeholder="Your Name" required/>
+        <input type="email" id="email" placeholder="Your Email" required/>
+        <select id="citySelect" required><option disabled selected>Select City</option></select>
+        <select id="hotelSelect" required><option disabled selected>Select Hotel</option></select>
+        <input type="date" id="checkin" required/>
+        <input type="date" id="checkout" required/>
+        <div class="loader" id="loader"></div>
+        <button type="submit">Book Now</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Hotel List -->
+  <section class="hotels container" id="hotels">
+    <h3>Available Hotels</h3>
+    <div class="filter-panel">
+      <input type="text" id="searchHotel" placeholder="Search hotel name...">
+      <select id="priceFilter">
+        <option value="">Price Range</option>
+        <option value="3000">Under ₹3000</option>
+        <option value="5000">Under ₹5000</option>
+      </select>
+      <select id="starFilter">
+        <option value="">Star Rating</option>
+        <option value="3">3 Stars</option>
+        <option value="4">4 Stars</option>
+        <option value="5">5 Stars</option>
+      </select>
+      <select id="amenityFilter">
+        <option value="">Amenity</option>
+        <option value="WiFi">WiFi</option>
+        <option value="Pool">Pool</option>
+        <option value="Breakfast">Breakfast</option>
+      </select>
+    </div>
+    <div class="hotel-list" id="hotelList"></div>
+  </section>
+
+  <!-- Map -->
+  <section class="container" id="mapSection">
+    <h3 style="color:#1e90ff; text-align:center; margin-bottom:20px;">Hotel Locations</h3>
+    <div id="map"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <p>&copy; 2025 IndianHotelHub. All rights reserved.</p>
+  </footer>
+
+  <!-- Booking Confirmation -->
+  <div class="modal" id="confirmationModal">
+    <div class="modal-content">
+      <p id="confirmationText"></p>
+      <button onclick="document.getElementById('confirmationModal').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <!-- 🔐 Updated Auth Modal -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-content">
+      <h3>Create Account</h3>
+      <input type="text" placeholder="Full Name">
+      <input type="tel" placeholder="Mobile Number">
+      <input type="email" placeholder="Email">
+      <input type="file" accept="image/*">
+      <input type="password" placeholder="Create Password">
+      <button onclick="alert('Signup submitted (dummy).')">Signup</button>
+      <hr style="margin: 20px 0;">
+      <h3>Login</h3>
+      <input type="email" placeholder="Email">
+      <input type="password" placeholder="Password">
+      <button onclick="alert('Login submitted (dummy).')">Login</button>
+      <button onclick="document.getElementById('authModal').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    const cityHotels = {
+      "Delhi": ["Hotel A", "Hotel B", "Hotel C"],
+      "Mumbai": ["Hotel D", "Hotel E"],
+      "Bengaluru": ["Hotel F", "Hotel G", "Hotel H"],
+      "Chennai": ["Hotel I", "Hotel J"],
+      "Hyderabad": ["Hotel K", "Hotel L"],
+      "Pune": ["Hotel M", "Hotel N"],
+      "Kolkata": ["Hotel O", "Hotel P"],
+      "Ahmedabad": ["Hotel Q", "Hotel R"],
+      "Jaipur": ["Hotel S", "Hotel T"],
+      "Lucknow": ["Hotel U", "Hotel V"],
+      "Indore": ["Hotel W", "Hotel X"],
+      "Chandigarh": ["Hotel Y", "Hotel Z"],
+      "Coimbatore": ["Hotel AA", "Hotel AB"],
+      "Bhopal": ["Hotel AC", "Hotel AD"],
+      "Patna": ["Hotel AE", "Hotel AF"],
+      "Nagpur": ["Hotel AG", "Hotel AH"],
+      "Surat": ["Hotel AI", "Hotel AJ"],
+      "Visakhapatnam": ["Hotel AK", "Hotel AL"],
+      "Vadodara": ["Hotel AM", "Hotel AN"],
+      "Ranchi": ["Hotel AO", "Hotel AP"],
+      "Guwahati": ["Hotel AQ", "Hotel AR"],
+      "Agra": ["Hotel AS", "Hotel AT"],
+      "Dehradun": ["Hotel AU", "Hotel AV"],
+      "Raipur": ["Hotel AW", "Hotel AX"],
+      "Amritsar": ["Hotel AY", "Hotel AZ"]
+    };
+
+    const cityCoordinates = {
+      "Delhi": { lat: 28.6139, lng: 77.2090 },
+      "Mumbai": { lat: 19.0760, lng: 72.8777 },
+      "Bengaluru": { lat: 12.9716, lng: 77.5946 },
+      "Chennai": { lat: 13.0827, lng: 80.2707 },
+      "Hyderabad": { lat: 17.3850, lng: 78.4867 },
+      "Pune": { lat: 18.5204, lng: 73.8567 },
+      "Kolkata": { lat: 22.5726, lng: 88.3639 },
+      "Ahmedabad": { lat: 23.0225, lng: 72.5714 },
+      "Jaipur": { lat: 26.9124, lng: 75.7873 },
+      "Lucknow": { lat: 26.8467, lng: 80.9462 },
+      "Indore": { lat: 22.7196, lng: 75.8577 },
+      "Chandigarh": { lat: 30.7333, lng: 76.7794 },
+      "Coimbatore": { lat: 11.0168, lng: 76.9558 },
+      "Bhopal": { lat: 23.2599, lng: 77.4126 },
+      "Patna": { lat: 25.5941, lng: 85.1376 },
+      "Nagpur": { lat: 21.1458, lng: 79.0882 },
+      "Surat": { lat: 21.1702, lng: 72.8311 },
+      "Visakhapatnam": { lat: 17.6868, lng: 83.2185 },
+      "Vadodara": { lat: 22.3072, lng: 73.1812 },
+      "Ranchi": { lat: 23.3441, lng: 85.3096 },
+      "Guwahati": { lat: 26.1445, lng: 91.7362 },
+      "Agra": { lat: 27.1767, lng: 78.0081 },
+      "Dehradun": { lat: 30.3165, lng: 78.0322 },
+      "Raipur": { lat: 21.2514, lng: 81.6296 },
+      "Amritsar": { lat: 31.6340, lng: 74.8723 }
+    };
+
+    const citySelect = document.getElementById('citySelect'),
+          hotelSelect = document.getElementById('hotelSelect'),
+          hotelList = document.getElementById('hotelList'),
+          bookingForm = document.getElementById('bookingForm'),
+          loader = document.getElementById('loader'),
+          confirmationText = document.getElementById('confirmationText'),
+          navToggle = document.querySelector('.menu-toggle'),
+          nav = document.querySelector('nav');
+
+    Object.keys(cityHotels).forEach(city => {
+      const opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      citySelect.appendChild(opt);
+    });
+
+    function renderHotels(hotels, city) {
+      const search = document.getElementById('searchHotel').value.toLowerCase();
+      hotelList.innerHTML = hotels
+        .filter(h => h.toLowerCase().includes(search))
+        .map(hotel => `
+          <div class="hotel-card">
+            <img class="hotel-image" src="https://source.unsplash.com/300x180/?hotel,${hotel}" alt="${hotel}"/>
+            <div class="hotel-info">
+              <h4>${hotel}</h4>
+              <p>${city} | A premium hotel experience</p>
+              <div class="price">₹${(3000 + Math.random()*5000).toFixed(0)}</div>
+              <button>View Details</button>
+            </div>
+          </div>
+        `).join('');
+    }
+
+    citySelect.addEventListener('change', () => {
+      const city = citySelect.value;
+      hotelSelect.innerHTML = `<option disabled selected>Select Hotel</option>`;
+      cityHotels[city].forEach(hotel => {
+        const o = document.createElement('option');
+        o.textContent = hotel;
+        hotelSelect.appendChild(o);
+      });
+      renderHotels(cityHotels[city], city);
+    });
+
+    document.getElementById('searchHotel').addEventListener('input', () => {
+      const city = citySelect.value;
+      if (city) renderHotels(cityHotels[city], city);
+    });
+
+    bookingForm.addEventListener('submit', e => {
+      e.preventDefault();
+      loader.style.display = 'inline-block';
+      setTimeout(() => {
+        loader.style.display = 'none';
+        const name = document.getElementById('name').value;
+        const city = citySelect.value;
+        const hotel = hotelSelect.value;
+        confirmationText.innerHTML = `Thank you, <strong>${name}</strong>! Your booking at <strong>${hotel}</strong>, <strong>${city}</strong> has been confirmed.`;
+        document.getElementById('confirmationModal').style.display = 'flex';
+        bookingForm.reset();
+        hotelSelect.innerHTML = `<option disabled selected>Select Hotel</option>`;
+      }, 1000);
+    });
+
+    navToggle.addEventListener('click', () => nav.classList.toggle('show'));
+    navToggle.addEventListener('keypress', e => {
+      if (e.key === 'Enter') nav.classList.toggle('show');
+    });
+
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 22.9734, lng: 78.6569 },
+        zoom: 5
+      });
+      Object.entries(cityCoordinates).forEach(([city, coords]) => {
+        new google.maps.Marker({ position: coords, map, title: city });
+      });
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANK86kFyqi5QAtOoZHZfCpKdo866fZUUY&callback=initMap"></script>
+  <!-- 🔥 Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- 🔥 Firebase Config & Booking Submit Logic -->
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1ZSAiwwllQlyVz_gI9ERVTKh5e9ygKwM",
+    authDomain: "indianhotelhub.firebaseapp.com",
+    databaseURL: "https://indianhotelhub-default-rtdb.firebaseio.com",
+    projectId: "indianhotelhub",
+    storageBucket: "indianhotelhub.firebasestorage.app",
+    messagingSenderId: "973495463486",
+    appId: "1:973495463486:web:52ed674d972e68b5d1eb6f",
+    measurementId: "G-HP88ZSR308"
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // 🔄 Booking Submission Handler
+  bookingForm.addEventListener('submit', e => {
+    e.preventDefault();
+    loader.style.display = 'inline-block';
+
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const city = citySelect.value;
+    const hotel = hotelSelect.value;
+    const checkin = document.getElementById('checkin').value;
+    const checkout = document.getElementById('checkout').value;
+
+    const bookingData = {
+      name,
+      email,
+      city,
+      hotel,
+      checkin,
+      checkout,
+      timestamp: new Date().toISOString()
+    };
+
+    database.ref('bookings').push(bookingData)
+      .then(() => {
+        loader.style.display = 'none';
+        confirmationText.innerHTML = `Thank you, <strong>${name}</strong>! Your booking at <strong>${hotel}</strong>, <strong>${city}</strong> has been confirmed.`;
+        document.getElementById('confirmationModal').style.display = 'flex';
+        bookingForm.reset();
+        hotelSelect.innerHTML = `<option disabled selected>Select Hotel</option>`;
+      })
+      .catch(error => {
+        loader.style.display = 'none';
+        alert("Firebase Error: " + error.message);
+      });
+  });
+</script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="firebase.js"></script>
+
+<script>
+  function handleAuthClick() {
+    firebase.auth().onAuthStateChanged(user => {
+      if (user && user.emailVerified) {
+        window.location.href = "login.html";
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  }
+</script>
+
+
+</body>
+</html>

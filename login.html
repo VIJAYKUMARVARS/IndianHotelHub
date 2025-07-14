@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login | IndianHotelHub</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1rem;
+    }
+    .form-group label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #fff;
+      transition: 0.3s;
+      pointer-events: none;
+    }
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+      top: -10px;
+      left: 10px;
+      font-size: 0.8rem;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0 6px;
+      border-radius: 4px;
+      color: #ffd700;
+    }
+    .submit-btn {
+      background: #28a745;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .submit-btn:hover {
+      background: #218838;
+    }
+    .message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 1rem;
+      min-height: 20px;
+    }
+    .link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.95rem;
+    }
+    .link a {
+      color: #ffd700;
+      text-decoration: none;
+    }
+    .link a:hover {
+      text-decoration: underline;
+    }
+    #forgotSection {
+      display: none;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome Back</h2>
+
+    <!-- 🔐 Login Form -->
+    <div class="form-group">
+      <input type="email" id="email" required placeholder=" " />
+      <label for="email">Email</label>
+    </div>
+
+    <div class="form-group">
+      <input type="password" id="password" required placeholder=" " />
+      <label for="password">Password</label>
+    </div>
+
+    <div class="submit-btn" id="loginBtn">Login</div>
+    <div class="message" id="message"></div>
+
+    <div class="link">
+      <a href="#" onclick="showForgotPassword()">Forgot Password?</a>
+    </div>
+
+    <!-- 🛠️ Forgot Password Section -->
+    <div id="forgotSection">
+      <div class="form-group">
+        <input type="email" id="forgotEmail" placeholder=" " />
+        <label for="forgotEmail">Enter your registered email</label>
+      </div>
+      <div class="submit-btn" onclick="resetPassword()">Send Reset Email</div>
+    </div>
+
+    <div class="link">
+      Not a member? <a href="Sign Up.html">Create Account</a>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="firebase.js"></script>
+
+  <!-- 🔐 Firebase Login & Reset Logic -->
+  <script>
+    const message = document.getElementById("message");
+
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      message.innerText = "";
+
+      if (!email || !password) {
+        message.innerText = "❗ Please fill all fields.";
+        return;
+      }
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        const user = cred.user;
+
+        if (!user.emailVerified) {
+          message.innerText = "⚠️ Please verify your email before logging in.";
+          return;
+        }
+
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        message.innerText = "✅ Login successful! Redirecting...";
+
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 2000);
+      } catch (error) {
+        message.innerText = "❌ " + error.message;
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", login);
+
+    function showForgotPassword() {
+      document.getElementById("forgotSection").style.display = "block";
+    }
+
+    function resetPassword() {
+      const email = document.getElementById("forgotEmail").value.trim();
+      if (!email) {
+        alert("❗ Please enter your email.");
+        return;
+      }
+
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          alert("✅ Reset email sent! Check your inbox.");
+        })
+        .catch(error => {
+          alert("❌ " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup | IndianHotelHub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .container {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(15px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      z-index: 10;
+    }
+    h2 {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.3);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .form-group label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #fff;
+      pointer-events: none;
+      transition: 0.3s;
+    }
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+      top: -8px;
+      left: 8px;
+      font-size: 0.8rem;
+      color: #ffdd57;
+      background: rgba(255,255,255,0.2);
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      background: #28a745;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 10px;
+      transition: background 0.3s, transform 0.3s;
+      user-select: none;
+    }
+    .submit-btn:hover {
+      background: #218838;
+      transform: scale(1.03);
+    }
+    .message {
+      text-align: center;
+      color: #fff;
+      margin-top: 15px;
+      font-size: 1rem;
+      min-height: 1.2rem;
+    }
+    .congrats {
+      display: none;
+      text-align: center;
+      color: #00ffcc;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      animation: pop 0.6s ease-in-out;
+    }
+    .loader {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      margin: -25px 0 0 -25px;
+      border: 6px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 11;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="container">
+    <h2>Signup</h2>
+    <div class="congrats" id="congrats">🎉 Congratulations! Your account was created successfully.</div>
+
+    <div class="form-group">
+      <input type="text" id="name" required placeholder=" " />
+      <label for="name">Full Name</label>
+    </div>
+    <div class="form-group">
+      <input type="tel" id="mobile" required placeholder=" " />
+      <label for="mobile">Mobile Number</label>
+    </div>
+    <div class="form-group">
+      <input type="email" id="email" required placeholder=" " />
+      <label for="email">Email</label>
+    </div>
+    <div class="form-group">
+      <input type="password" id="password" required placeholder=" " />
+      <label for="password">Password</label>
+    </div>
+
+    <div class="submit-btn" id="submitBtn">Submit</div>
+    <div class="loader" id="loader"></div>
+    <div class="message" id="message"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1ZSAiwwllQlyVz_gI9ERVTKh5e9ygKwM",
+    authDomain: "indianhotelhub.firebaseapp.com",
+    databaseURL: "https://indianhotelhub-default-rtdb.firebaseio.com",
+    projectId: "indianhotelhub",
+    storageBucket: "indianhotelhub.appspot.com",
+    messagingSenderId: "973495463486",
+    appId: "1:973495463486:web:52ed674d972e68b5d1eb6f"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  const message = document.getElementById("message");
+  const loader = document.getElementById("loader");
+  const submitBtn = document.getElementById("submitBtn");
+  const congrats = document.getElementById("congrats");
+  const container = document.getElementById("container");
+
+  function launchConfetti() {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti(Object.assign({}, defaults, {
+        particleCount,
+        origin: { x: Math.random(), y: Math.random() * 0.6 }
+      }));
+    }, 250);
+  }
+
+  function signup() {
+    const name = document.getElementById("name").value.trim();
+    const mobile = document.getElementById("mobile").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    message.innerText = "";
+    congrats.style.display = "none";
+
+    if (!name || !mobile || !email || !password) {
+      message.innerText = "❗ Please fill all fields.";
+      return;
+    }
+
+    if (password.length < 6) {
+      message.innerText = "❗ Password must be at least 6 characters.";
+      return;
+    }
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!phoneRegex.test(mobile)) {
+      message.innerText = "❗ Enter a valid 10-digit Indian mobile number.";
+      return;
+    }
+
+    loader.style.display = "block";
+    submitBtn.style.pointerEvents = "none";
+
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(cred => {
+        const user = cred.user;
+        return db.ref('users/' + user.uid).set({ name, mobile, email })
+          .then(() => user.updateProfile({ displayName: name }))
+          .then(() => user.sendEmailVerification());
+      })
+      .then(() => {
+        loader.style.display = "none";
+        submitBtn.style.pointerEvents = "auto";
+
+        congrats.style.display = "block";
+        message.innerText = "";
+
+        launchConfetti();
+
+        // Clear form
+        document.getElementById("name").value = "";
+        document.getElementById("mobile").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
+
+        container.scrollIntoView({ behavior: 'smooth' });
+
+        // Redirect to login page after 5 seconds
+        setTimeout(() => {
+          window.location.href = "login.html";  // Change if your login page path is different
+        }, 5000);
+      })
+      .catch(error => {
+        loader.style.display = "none";
+        submitBtn.style.pointerEvents = "auto";
+        if (error.code === "auth/email-already-in-use") {
+          message.innerText = "❌ This email is already registered. Please login.";
+        } else if (error.code === "auth/weak-password") {
+          message.innerText = "❌ Weak password, please make it stronger.";
+        } else {
+          message.innerText = "❌ " + error.message;
+        }
+      });
+  }
+
+  submitBtn.addEventListener("click", signup);
+  </script>
+
+</body>
+</html>
