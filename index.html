@@ -130,7 +130,7 @@
         <a href="#hotels">Hotels</a>
         <a href="#mapSection">Map</a>
         <a href="#booking">Booking</a>
-        <a href="#contact">Contact</a>
+        <a href="#contact" onclick="showContactInfo()">Contact</a>
         <button class="auth-button" onclick="handleAuthClick()">Login/Signup</button>
 
       </nav>
@@ -188,8 +188,13 @@
   </section>
 
   <!-- Footer -->
+   <div id="contactInfo" style="display:none; text-align:center; margin:20px; font-size:18px;">
+  📞 <b>8298385287</b><br/>
+  📧 <b>vijaykumarthakur106@gmail.com</b>
+</div>
+
   <footer id="contact">
-    <p>&copy; 2025 IndianHotelHub. All rights reserved.</p>
+    <p style="text-align: center;">&copy; 2025 IndianHotelHub. All rights reserved.</p>
   </footer>
 
   <!-- Booking Confirmation -->
@@ -356,6 +361,14 @@
       });
     }
   </script>
+  <script>
+  function showContactInfo() {
+    var contactDiv = document.getElementById("contactInfo");
+    contactDiv.style.display = "block";
+    contactDiv.scrollIntoView({ behavior: "smooth" });
+  }
+</script>
+
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyANK86kFyqi5QAtOoZHZfCpKdo866fZUUY&callback=initMap"></script>
   <!-- 🔥 Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
